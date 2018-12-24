@@ -42,10 +42,10 @@ def callback():
 
     return 'OK'
 
-@handler.add(MessageEvent, message=TextSendMessage)
+@handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     print(event.message.text)
-    app.logger.info('Request body: ' + str(body))
+    app.logger.info('Sending Message: ' + str(event.message.text))
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=event.message.text)
