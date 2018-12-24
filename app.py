@@ -32,6 +32,7 @@ def callback():
     # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info('Request body: '+str(body))
+    print('Request body: ' + str(body))
 
     # hadle webhook body
     try:
@@ -43,9 +44,11 @@ def callback():
 
 @handler.add(MessageEvent, message=TextSendMessage)
 def handle_message(event):
+    print(event.message.text)
+    app.logger.info('Request body: ' + str(body))
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text = event.message.text)
+        TextSendMessage(text=event.message.text)
     )
 
 if __name__ == '__main__':
