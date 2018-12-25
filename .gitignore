@@ -106,3 +106,9 @@ venv.bak/
 line-bot-sdk-python
 # access token
 line_token.py
+
+# SSL certification
+cert.crt
+server_pub.csr
+server_secret.key
+
