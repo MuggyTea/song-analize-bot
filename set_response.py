@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+from analize_logging import logger
 
 """ コード解析して得られた結果を成形する関数 """
 def set_response_chord_analize(analize_chord_s):
@@ -38,6 +39,7 @@ def set_response_chord_analize(analize_chord_s):
     """
     # str型を辞書型に変換
     analize_chord_j = json.loads(analize_chord_s)
+    logger.info('str count of result'.format(len(str(analize_chord_s))))
     # 総検出数
     num_chords = analize_chord_j['chords_result']['num_chords']
     # コードのみを格納する辞書を用意する

@@ -19,6 +19,7 @@ import settings
 import chord_analize
 import song_upload
 import set_response
+from analize_logging import logger
 
 app = Flask(__name__)
 # httpsでアクセスできるようにする
@@ -41,7 +42,7 @@ def callback():
 
     # get request body as text
     body = request.get_data(as_text=True)
-    app.logger.info('Request body: '+str(body))
+    logger.info('Request body: '+str(body))
     print('Request body: ' + str(body))
 
     # hadle webhook body
@@ -79,7 +80,7 @@ def handle_message(event):
     """
     # 入ってきたものがaudioだったら
     if event.message.type is not 'audio':
-        app.logger.info('Sending Message: ' + str(event.message.text))
+        logger.info('Sending Message: ' + str(event.message.text))
         print('Sending Message: ' + str(event.message.text))
         # LINE BOTが返す内容を決める
         try:
@@ -95,14 +96,17 @@ def handle_message(event):
                 event.reply_token,  # トークンとテキストで紐づけてる
                 TextSendMessage(text='error')
             )
+            logger.error(e)
             print(e)
         return 'ok'
 
-    print(str(event.message.id))
+    # print(str(event.message.id))
+    logger.info('Message ID: {}'.format(str(event.message.id)))
     # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
     message_content = line_bot_api.get_message_content(event.message.id)
     # tmpディレクトリに保存
     input_file_path = 'tmp/{}.m4a'.format(event.message.id)
+    logger.info('Receive m4a file name: {}'.format(str(input_file_path)))
     with open(input_file_path, 'wb') as fd:
         for chunk in message_content.iter_content():
             fd.write(chunk)
@@ -111,10 +115,10 @@ def handle_message(event):
         chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
         # mp3を引数にして、コード解析APIに投げる
         analize_chord = chord_analize.detect_chords(input_file=chunk_mp3)
-        app.logger.info('Sending Message: ' + str(analize_chord))
-        print('Sending Message: ' + str(analize_chord))
         # 得られたレスポンスを成形する
         analize_chord_j = json.loads(analize_chord)
+        logger.info('Response Header: {}'.format(analize_chord))
+        print(analize_chord)
         if analize_chord_j['status']['code'] == (200 or 201):
             num_chords, chord_analize_response = set_response.set_response_chord_analize(analize_chord)
         elif analize_chord_j['errors'][0]['error_code'] == '23':
@@ -133,12 +137,13 @@ def handle_message(event):
                 str(chord_analize_response)
             )
         )
-        print(analize_chord)
+        logger.info('Result: {}'.format(chord_analize_response))
     except LineBotApiError as e:
         line_bot_api.reply_message(
             event.reply_token,  # トークンとテキストで紐づけてる
             TextSendMessage(text='調子が悪いみたい。もう一度試してみてね')
         )
+        logger.error(e)
         print(e)
     return 'ok'
 

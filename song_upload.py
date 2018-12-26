@@ -12,6 +12,7 @@ import os.path
 import sys
 import os
 import glob
+from analize_logging import logger
 
 """
 LIN　BOTから送信された音声データをmp3に変換し、tmp/配下にアップロードするところまで担当する
@@ -25,16 +26,19 @@ def m4a_to_mp3(input_file_path, file_m4a):
     root, ext = os.path.splitext(input_file_path)
     if ext not in ['.m4a', '.mp4']:
         print('if ext not in m4a')
+        logger.debug('input file: {}'.format(str(input_file_path)))
         return
     # 変換するmp3ファイルの名前
     input_file_path_mp3 = '%s.mp3' % root
     # set commands for m4a to mp3 using ffmpeg
     cmd = 'ffmpeg -i %s %s' % (input_file_path, input_file_path_mp3)
+    logger.info('converted mp3 file: {}'.format(input_file_path_mp3))
     # do m4a to mp3（どちらもバイナリではなくパスを指定すること）
     status, output = subprocess.getstatusoutput(cmd)
 
     if status != 0:
         print('status error')
+        logger.error('failed convert {0}, {1}'.format(status, output))
         return
     # mp3ファイルパスを返す
     return input_file_path_mp3

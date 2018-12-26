@@ -114,3 +114,5 @@ server_secret.key
 
 tmp/*
 .idea
+settings.py
+log/*
