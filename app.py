@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import traceback
 from flask import Flask, request, abort
 from linebot import (
@@ -86,8 +87,9 @@ def handle_message(event):
                 event.reply_token,  # トークンとテキストで紐づけてる
                 TextSendMessage(
 
-                    text='あなたと一緒にコード解析のお手伝いするよ\n'
-                         '15分以内の音楽ファイルか音声を送ってみてね')
+                    text='あなたと一緒に耳コピのお手伝いするよー！\n'
+                         'わたしはコード解析が得意だよ〜\n'
+                         '10分以内の音楽ファイルか音声を送ってみてね')
             )
         except LineBotApiError as e:
             line_bot_api.reply_message(
@@ -113,17 +115,17 @@ def handle_message(event):
         app.logger.info('Sending Message: ' + str(analize_chord))
         print('Sending Message: ' + str(analize_chord))
         # 得られたレスポンスを成形する
-        num_chords, chord_analize_response = set_response.set_response_chord_analize(analize_chord)
-    except:
-        print(traceback.format_exc())
-        raise
+        analize_chord_j = json.loads(analize_chord)
+        if analize_chord_j['status']['code'] == (200 or 201):
+            num_chords, chord_analize_response = set_response.set_response_chord_analize(analize_chord)
+        elif analize_chord_j['errors'][0]['error_code'] == '23':
+            chord_analize_response = 'オーディオファイルが短すぎるみたい。\n15秒以上にしてもう一回送ってみてね！'
+        elif analize_chord_j['errors'][0]['error_code'] == '22':
+            chord_analize_response = '私の知らないファイル形式かも。\n' \
+                                     'mp3形式かaac形式しか今はわからないんだ、、。\nあなたは物知りで凄いなぁ'
+        else:
+            chord_analize_response = 'ちょっと調子が悪いみたい。\nもう一回試してみてもらえるかな？'
 
-    try:
-        # # LINE BOTが返す内容を決めるメソッド
-        # line_bot_api.reply_message(
-        #     event.reply_token,  # トークンとテキストで紐づけてる
-        #     TextSendMessage(text=analize_chord)
-        # )
         # LINE BOTが返す内容を決めるメソッド
         line_bot_api.reply_message(
             event.reply_token,  # トークンとテキストで紐づけてる
@@ -132,12 +134,11 @@ def handle_message(event):
                 str(chord_analize_response)
             )
         )
-
         print(analize_chord)
     except LineBotApiError as e:
         line_bot_api.reply_message(
             event.reply_token,  # トークンとテキストで紐づけてる
-            TextSendMessage(text='レスポンス文字列が長すぎるのでちょっと待ってね')
+            TextSendMessage(text='調子が悪いみたい。もう一度試してみてね')
         )
         print(e)
     return 'ok'
