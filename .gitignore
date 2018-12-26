@@ -112,3 +112,4 @@ cert.crt
 server_pub.csr
 server_secret.key
 
+tmp/*
