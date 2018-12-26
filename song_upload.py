@@ -20,13 +20,6 @@ KEY1 = settings.SONIC_API_KEY
 
 # 音声ファイルをmp3に変換
 def m4a_to_mp3(input_file_path, file_m4a):
-    # if input_file_name.endswith('.m4a'):
-    #         subprocess.call([
-    #             "ffmpeg", "-i",
-    #             os.path.join(path, filename),
-    #             "-acodec", "libmp3lame", "-ab", "256k",
-    #             os.path.join(OUTPUT_DIR, '%s.mp3' % filename[:-4])
-    #         ])
 
     # パスから、拡張子と名前を分ける
     root, ext = os.path.splitext(input_file_path)
@@ -35,15 +28,15 @@ def m4a_to_mp3(input_file_path, file_m4a):
         return
     # 変換するmp3ファイルの名前
     input_file_path_mp3 = '%s.mp3' % root
-    # m4a to mp3（どちらもバイナリではなくパスを指定すること）
+    # set commands for m4a to mp3 using ffmpeg
     cmd = 'ffmpeg -i %s %s' % (input_file_path, input_file_path_mp3)
+    # do m4a to mp3（どちらもバイナリではなくパスを指定すること）
     status, output = subprocess.getstatusoutput(cmd)
-    # with open(input_file_path_mp3, mode='wb') as fb:   # ファイル名
 
     if status != 0:
         print('status error')
         return
-
+    # mp3ファイルパスを返す
     return input_file_path_mp3
 
 
