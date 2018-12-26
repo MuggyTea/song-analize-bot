@@ -148,10 +148,8 @@ def handle_message(event):
     return 'ok'
 
 if __name__ == '__main__':
-    port = os.environ.get('PORT', 3333)
     # app.run(
     #     host = 'localhost',port=3333, ssl_context=context, threaded=True, debug=True
     # )
-    app.run(
-        host = 'localhost',port=3333
-    )
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
