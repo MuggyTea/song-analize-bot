@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import traceback
 from flask import Flask, request, abort
 from linebot import (
     LineBotApi, WebhookHandler
@@ -10,11 +11,12 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage
+    MessageEvent, TextMessage, TextSendMessage, AudioMessage
 )
 
 import settings
-import code_analize
+import chord_analize
+import song_upload
 
 app = Flask(__name__)
 # httpsでアクセスできるようにする
@@ -48,7 +50,7 @@ def callback():
 
     return 'OK'
 
-@handler.add(MessageEvent, message=TextMessage)
+@handler.add(MessageEvent, message=(TextMessage, AudioMessage))
 def handle_message(event):
     # eventがRequest Body
     """
@@ -73,20 +75,49 @@ def handle_message(event):
         "destination":"Ue5d4eb302368f469540f3742b5f6d2dc"
         }
     """
-    # 入ってきたものがaudio以外だったら、とりあえずおうむ返し処理にする
-    if event.massage.type is not 'audio':
-        if event.message.type is 'text':
-            app.logger.info('Sending Message: ' + str(event.message.text))
-            print('Sending Message: ' + str(event.message.text))
+    # 入ってきたものがaudioだったら
+    if event.message.type is 'audio':
+        print(str(event.message.id))
+        # tmpフォルダにアップロードする
+        # input_file = song_upload.m4a_to_mp3(event.reply_token, event.message.id + '.m4a')
+
+        # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
+        message_content = line_bot_api.get_message_content(event.message.id)
+        # tmpディレクトリに保存
+        input_file_path = 'tmp/{}.m4a'.format(event.message.id)
+        with open(input_file_path, 'wb') as fd:
+            for chunk in message_content.iter_content():
+                fd.write(chunk)
+        try:
+            # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
+            chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
+            analize_chord = chord_analize.detect_chords_by_sonic(input_file=chunk_mp3)
+        except:
+            print('file is None')
+
+        app.logger.info('Sending Message: ' + str(analize_chord))
+        print('Sending Message: ' + str(analize_chord))
+
+
+        try:
             # LINE BOTが返す内容を決める
             line_bot_api.reply_message(
                 event.reply_token,  # トークンとテキストで紐づけてる
-                TextSendMessage(text=event.message.text)
+                TextSendMessage(text=analize_chord)
             )
-        return '音声ファイルを送信してね'
+            return 'ok'
+        except:
+            print(traceback.format_exc())
 
-    # tmpフォルダにダウンロードする
-    code_analize.set_param_to_api(event.message.replyToken)
+    if event.message.type is 'text':
+        app.logger.info('Sending Message: ' + str(event.message.text))
+        print('Sending Message: ' + str(event.message.text))
+        # LINE BOTが返す内容を決める
+        line_bot_api.reply_message(
+            event.reply_token,  # トークンとテキストで紐づけてる
+            TextSendMessage(text=event.message.text)
+        )
+    return 'ok'
 
 if __name__ == '__main__':
     port = os.environ.get('PORT', 3333)
