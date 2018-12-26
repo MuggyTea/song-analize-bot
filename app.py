@@ -85,8 +85,8 @@ def handle_message(event):
             line_bot_api.reply_message(
                 event.reply_token,  # トークンとテキストで紐づけてる
                 TextSendMessage(
-                    text='あなたと一緒にコード解析のお手伝いするよ\n'
-                         '15分以内の音楽ファイルか音声を送ってみてね')
+                    text='あなたのコード解析のお手伝いするよ！\n'
+                         '10分以内の音楽ファイルか音声を送ってみてね')
             )
         except LineBotApiError as e:
             line_bot_api.reply_message(
