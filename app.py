@@ -87,8 +87,7 @@ def handle_message(event):
                 event.reply_token,  # トークンとテキストで紐づけてる
                 TextSendMessage(
 
-                    text='あなたと一緒に耳コピのお手伝いするよー！\n'
-                         'わたしはコード解析が得意だよ〜\n'
+                    text='あなたと一緒にコード解析のお手伝いするよー！\n'
                          '10分以内の音楽ファイルか音声を送ってみてね')
             )
         except LineBotApiError as e:
