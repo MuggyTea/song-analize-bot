@@ -28,10 +28,11 @@ def m4a_to_mp3(input_file_path, file_m4a):
         print('if ext not in m4a')
         logger.debug('input file: {}'.format(str(input_file_path)))
         return
-    if os.path.exists('mp3_files/'):
-        os.mkdir('mp3_files/')
+    if os.path.exists('/tmp/'):
+        logger.info('make directory to mp3_files')
+        os.mkdir('/tmp/')
     # 変換するmp3ファイルの名前
-    input_file_path_mp3 = 'mp3_files/%s.mp3' % root
+    input_file_path_mp3 = '%s.mp3' % root
     # set commands for m4a to mp3 using ffmpeg
     cmd = 'ffmpeg -i %s %s' % (input_file_path, input_file_path_mp3)
     logger.info('converted mp3 file: {}'.format(input_file_path_mp3))
