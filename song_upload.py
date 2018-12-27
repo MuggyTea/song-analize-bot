@@ -36,7 +36,7 @@ def m4a_to_mp3(input_file_path):
     # 変換するmp3ファイルの名前
     input_file_path_mp3 = '%s.mp3' % root
     # set commands for m4a to mp3 using ffmpeg
-    cmd = 'ffmpeg -i %s -ab 64k -ar 16000 %s' % (input_file_path, input_file_path_mp3)
+    cmd = 'ffmpeg -i %s -ab 32k -ar 16000 %s' % (input_file_path, input_file_path_mp3)
     logger.info('converted mp3 file: {}'.format(input_file_path_mp3))
     logger.info(cmd)
     # do m4a to mp3（どちらもバイナリではなくパスを指定すること)
