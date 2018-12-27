@@ -45,7 +45,9 @@ def m4a_to_mp3(input_file_path):
         logger.error('failed convert {0}, {1}'.format(status, output))
         return input_file_path_mp3
     logger.info('Done converted\nstatus: {0}\noutput: {1}'.format(status, output))
-
+    # 保存
+    # with open(input_file_path_mp3, 'rw') as fb:
+    #     fb.write(input_file_path_mp3)
     # mp3ファイルを5分にカットする
     mp3 = AudioSegment.from_file(input_file_path_mp3, format='mp3')
     # 0~500sec(300000ms)にカット

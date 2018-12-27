@@ -63,6 +63,7 @@ def handle_message(event):
     try:
         # 入ってきたものがaudio以外だったら、デフォルトメッセージを返す
         if event.message.type is not 'audio':
+            """
             if 'https://www.youtube.com/' in event.message.text:
                 try:
                     logger.info('Message ID: {}'.format(str(event.message.id)))
@@ -93,7 +94,6 @@ def handle_message(event):
                     print(e)
 
                     return 'ok'
-
             else:   # それ以外はデフォルトメッセージを返す
                 # LINE BOTが返す内容を決める
                 try:
@@ -113,6 +113,24 @@ def handle_message(event):
                     logger.error(e)
                     print(e)
                 return 'ok'
+            """
+            try:
+                line_bot_api.reply_message(
+                    event.reply_token,  # トークンとテキストで紐づけてる
+                    TextSendMessage(
+                        text='あなたと一緒にコード解析するよー！\n'
+                             '5分以内のmp3音楽ファイルか音声を録音して送ってみてね\n'
+                             'youtubeのURLも調べられるよ。でも少し時間が掛かっちゃうかも')
+                )
+            except LineBotApiError as e:
+                line_bot_api.reply_message(
+                    event.reply_token,  # トークンとテキストで紐づけてる
+                    TextSendMessage(text='あなたと一緒にコード解析するよー！\n'
+                                         '10分以内の音楽ファイルか音声を録音して送ってみてね\n')
+                )
+                logger.error(e)
+                print(e)
+            return 'ok'
 
         # print(str(event.message.id))
         logger.info('Message ID: {}'.format(str(event.message.id)))
@@ -127,20 +145,20 @@ def handle_message(event):
         with open(input_file_path, 'wb') as fd:
             for chunk in message_content.iter_content():
                 fd.write(chunk)
-            # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
-            # chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
-            chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
-            chord_analize_response = mp3_to_response(chunk_mp3)
+        # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
+        # chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
+        chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
+        chord_analize_response = mp3_to_response(chunk_mp3)
 
-            # LINE BOTが返す内容を決めるメソッド
-            line_bot_api.reply_message(
-                event.reply_token,  # トークンとテキストで紐づけてる
-                TextSendMessage(
-                    text=
-                    str(chord_analize_response)
-                )
+        # LINE BOTが返す内容を決めるメソッド
+        line_bot_api.reply_message(
+            event.reply_token,  # トークンとテキストで紐づけてる
+            TextSendMessage(
+                text=
+                str(chord_analize_response)
             )
-            logger.info('Result: {}'.format(chord_analize_response))
+        )
+        logger.info('Result: {}'.format(chord_analize_response))
     except LineBotApiError as e:
         logger.error(e)
         print(e)
