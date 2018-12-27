@@ -5,6 +5,7 @@
 import logging
 from logging import getLogger, StreamHandler, Formatter, FileHandler
 from datetime import datetime
+import os
 
 """
 1. loggerの設定
@@ -27,6 +28,8 @@ stream_handler.setFormatter(handler_format)
 # テキスト出力先
 timestamp = datetime.now().strftime("%Y-%m-%d")
 logging_file = 'ChordAnalize_{}.log'.format(timestamp)
+if os.path.exists('log/') is not True:
+    os.mkdir('log/')
 file_handler = FileHandler('log/{}'.format(logging_file))
 # set logging format for log files
 file_handler.setFormatter(handler_format)
