@@ -146,6 +146,9 @@ def handle_message(event):
         with open(input_file_path, 'wb') as fd:
             for chunk in message_content.iter_content():
                 fd.write(chunk)
+                # S3にアップロード
+                upload_s3.sign_s3(
+                    '/m4a/{}'.format(input_file_path), "audio/mpeg")
         # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
         # chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
         chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
