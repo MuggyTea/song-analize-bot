@@ -28,7 +28,7 @@ def m4a_to_mp3(input_file_path, file_m4a):
         print('if ext not in m4a')
         logger.debug('input file: {}'.format(str(input_file_path)))
         return
-    if os.path.exists('/tmp/'):
+    if os.path.exists('/tmp/') is not True:
         logger.info('make directory to mp3_files')
         os.mkdir('/tmp/')
     # 変換するmp3ファイルの名前
