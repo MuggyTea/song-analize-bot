@@ -18,6 +18,7 @@ from linebot.models import (
 )
 
 import settings
+import upload_s3
 import chord_analize
 import song_upload
 import set_response
@@ -119,8 +120,8 @@ def handle_message(event):
                     event.reply_token,  # トークンとテキストで紐づけてる
                     TextSendMessage(
                         text='あなたと一緒にコード解析するよー！\n'
-                             '5分以内のmp3音楽ファイルか音声を録音して送ってみてね\n'
-                             'youtubeのURLも調べられるよ。でも少し時間が掛かっちゃうかも')
+                             '5分以内のmp3音楽ファイルか音声を録音して送ってみてね'
+                             )
                 )
             except LineBotApiError as e:
                 line_bot_api.reply_message(
