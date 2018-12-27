@@ -12,7 +12,9 @@ from linebot.exceptions import (
     InvalidSignatureError,
     LineBotApiError)
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, AudioMessage
+    MessageEvent,  TextSendMessage,
+    TextMessage, AudioMessage,
+    FileMessage,ImageMessage, StickerMessage, VideoMessage, LocationMessage,
 )
 
 import settings
@@ -20,7 +22,8 @@ import chord_analize
 import song_upload
 import set_response
 from analize_logging import logger
-
+from youtube2mp3 import youtube2mp3
+from mp3_to_response import mp3_to_response
 app = Flask(__name__)
 # httpsでアクセスできるようにする
 # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
@@ -53,102 +56,100 @@ def callback():
 
     return 'OK'
 
-@handler.add(MessageEvent, message=(TextMessage, AudioMessage))
+@handler.add(MessageEvent, message=(TextMessage, AudioMessage,
+                                    FileMessage,ImageMessage,
+                                    StickerMessage, VideoMessage, LocationMessage))
 def handle_message(event):
-    # eventがRequest Body
-    """
-    Request body: {
-        "events":
-                [
-                    {
-                    "type":"message",
-                    "replyToken":"7ba6d25051584a7ca74ac658a5bdc758",
-                    "source":{
-                        "userId":"Ufc78ba9ae7596cda855bc9f7e4f00498",
-                        "type":"user"
-                        },
-                    "timestamp":1545766534620,
-                    "message":{
-                        "type":"text",
-                        "id":"9070678793256",
-                        "text":"はやか"
-                        }
-                    }
-                ],
-        "destination":"Ue5d4eb302368f469540f3742b5f6d2dc"
-        }
-    """
-    # 入ってきたものがaudioだったら
-    if event.message.type is not 'audio':
-        logger.info('Sending Message: ' + str(event.message.text))
-        print('Sending Message: ' + str(event.message.text))
-        # LINE BOTが返す内容を決める
-        try:
+    try:
+        # 入ってきたものがaudio以外だったら、デフォルトメッセージを返す
+        if event.message.type is not 'audio':
+            if 'https://www.youtube.com/' in event.message.text:
+                try:
+                    logger.info('Message ID: {}'.format(str(event.message.id)))
+                    logger.info('been Sent Message: ' + str(event.message.text))
+                    print('been Sent Message: ' + str(event.message.text))
+                    # youtubeURLの場合はmp3解析する(userIdにrenameする)
+                    yt2mp4 = youtube2mp3(event.message.text, event.message.id)
+                    logger.info('get youtube mp4 data. {}'.format(yt2mp4))
+                    yt2mp3 = song_upload.m4a_to_mp3(yt2mp4)
+                    # 得られたmp3データからレスポンス成形
+                    chord_analize_response = mp3_to_response(yt2mp3)
+                    # LINE BOTが返す内容を決めるメソッド
+                    line_bot_api.reply_message(
+                        event.reply_token,  # トークンとテキストで紐づけてる
+                        TextSendMessage(
+                            text=
+                            str(chord_analize_response)
+                        )
+                    )
+                    logger.info('Result: {}'.format(chord_analize_response))
+                    return 'ok'
+                except LineBotApiError as e:
+                    line_bot_api.reply_message(
+                        event.reply_token,  # トークンとテキストで紐づけてる
+                        TextSendMessage(text='調子が悪いみたい。もう一度試してみてね')
+                    )
+                    logger.error(e)
+                    print(e)
+
+                    return 'ok'
+
+            else:   # それ以外はデフォルトメッセージを返す
+                # LINE BOTが返す内容を決める
+                try:
+                    line_bot_api.reply_message(
+                        event.reply_token,  # トークンとテキストで紐づけてる
+                        TextSendMessage(
+                            text='あなたと一緒にコード解析するよー！\n'
+                                 '5分以内のmp3音楽ファイルか音声を録音して送ってみてね\n'
+                                 'youtubeのURLも調べられるよ。でも少し時間が掛かっちゃうかも')
+                    )
+                except LineBotApiError as e:
+                    line_bot_api.reply_message(
+                        event.reply_token,  # トークンとテキストで紐づけてる
+                        TextSendMessage(text='あなたと一緒にコード解析するよー！\n'
+                                 '10分以内の音楽ファイルか音声を録音して送ってみてね\n')
+                    )
+                    logger.error(e)
+                    print(e)
+                return 'ok'
+
+        # print(str(event.message.id))
+        logger.info('Message ID: {}'.format(str(event.message.id)))
+        # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
+        message_content = line_bot_api.get_message_content(event.message.id)
+        # tmpディレクトリに保存
+        input_file_path = '/tmp/{}.m4a'.format(event.message.id)
+        logger.info('Receive m4a file name: {}'.format(str(input_file_path)))
+        if os.path.exists('/tmp/') is not True:
+            logger.info('make temporary directory')
+            os.mkdir('/tmp/')
+        with open(input_file_path, 'wb') as fd:
+            for chunk in message_content.iter_content():
+                fd.write(chunk)
+            # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
+            # chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
+            chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
+            chord_analize_response = mp3_to_response(chunk_mp3)
+
+            # LINE BOTが返す内容を決めるメソッド
             line_bot_api.reply_message(
                 event.reply_token,  # トークンとテキストで紐づけてる
                 TextSendMessage(
-
-                    text='あなたと一緒にコード解析のお手伝いするよー！\n'
-                         '10分以内の音楽ファイルか音声を録音して送ってみてね')
+                    text=
+                    str(chord_analize_response)
+                )
             )
-        except LineBotApiError as e:
-            line_bot_api.reply_message(
-                event.reply_token,  # トークンとテキストで紐づけてる
-                TextSendMessage(text='error')
-            )
-            logger.error(e)
-            print(e)
-        return 'ok'
-
-    # print(str(event.message.id))
-    logger.info('Message ID: {}'.format(str(event.message.id)))
-    # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
-    message_content = line_bot_api.get_message_content(event.message.id)
-    # tmpディレクトリに保存
-    input_file_path = '/tmp/{}.m4a'.format(event.message.id)
-    logger.info('Receive m4a file name: {}'.format(str(input_file_path)))
-    if os.path.exists('/tmp/') is not True:
-        logger.info('make directory to m4a_files')
-        os.mkdir('/tmp/')
-    with open(input_file_path, 'wb') as fd:
-        for chunk in message_content.iter_content():
-            fd.write(chunk)
-    try:
-        # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
-        chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
-        # mp3を引数にして、コード解析APIに投げる
-        analize_chord = chord_analize.detect_chords(input_file=chunk_mp3)
-        # 得られたレスポンスを成形する
-        analize_chord_j = json.loads(analize_chord)
-        logger.info('Response Header: {}'.format(analize_chord))
-        print(analize_chord)
-        if analize_chord_j['status']['code'] == (200 or 201):
-            num_chords, chord_analize_response = set_response.set_response_chord_analize(analize_chord)
-        elif analize_chord_j['errors'][0]['error_code'] == '23':
-            chord_analize_response = 'オーディオファイルが短すぎるみたい。\n15秒以上にしてもう一回送ってみてね！'
-        elif analize_chord_j['errors'][0]['error_code'] == '22':
-            chord_analize_response = '私の知らないファイル形式かも。\n' \
-                                     'mp3形式かaac形式しか今はわからないんだ、、。\nあなたは物知りで凄いなぁ'
-        else:
-            chord_analize_response = 'ちょっと調子が悪いみたい。\nもう一回試してみてもらえるかな？'
-
-        # LINE BOTが返す内容を決めるメソッド
-        line_bot_api.reply_message(
-            event.reply_token,  # トークンとテキストで紐づけてる
-            TextSendMessage(
-                text=
-                str(chord_analize_response)
-            )
-        )
-        logger.info('Result: {}'.format(chord_analize_response))
+            logger.info('Result: {}'.format(chord_analize_response))
     except LineBotApiError as e:
+        logger.error(e)
+        print(e)
         line_bot_api.reply_message(
             event.reply_token,  # トークンとテキストで紐づけてる
             TextSendMessage(text='調子が悪いみたい。もう一度試してみてね')
         )
-        logger.error(e)
-        print(e)
     return 'ok'
+
 
 if __name__ == '__main__':
     app.run(
