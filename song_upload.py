@@ -15,7 +15,7 @@ import glob
 from analize_logging import logger
 
 """
-LIN　BOTから送信された音声データをmp3に変換し、tmp/配下にアップロードするところまで担当する
+LIN　BOTから送信された音声データをmp3に変換し、m4a_files/配下にアップロードするところまで担当する
 """
 KEY1 = settings.SONIC_API_KEY
 
@@ -23,12 +23,15 @@ KEY1 = settings.SONIC_API_KEY
 def m4a_to_mp3(input_file_path, file_m4a):
     # パスから、拡張子と名前を分ける
     root, ext = os.path.splitext(input_file_path)
+    logger.info('start m4a to mp3 convert {}'.format(input_file_path))
     if ext not in ['.m4a', '.mp4']:
         print('if ext not in m4a')
         logger.debug('input file: {}'.format(str(input_file_path)))
         return
+    if os.path.exists('mp3_files/'):
+        os.mkdir('mp3_files/')
     # 変換するmp3ファイルの名前
-    input_file_path_mp3 = '%s.mp3' % root
+    input_file_path_mp3 = 'mp3_files/%s.mp3' % root
     # set commands for m4a to mp3 using ffmpeg
     cmd = 'ffmpeg -i %s %s' % (input_file_path, input_file_path_mp3)
     logger.info('converted mp3 file: {}'.format(input_file_path_mp3))
