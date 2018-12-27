@@ -21,7 +21,6 @@ KEY1 = settings.SONIC_API_KEY
 
 # 音声ファイルをmp3に変換
 def m4a_to_mp3(input_file_path, file_m4a):
-
     # パスから、拡張子と名前を分ける
     root, ext = os.path.splitext(input_file_path)
     if ext not in ['.m4a', '.mp4']:

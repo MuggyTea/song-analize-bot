@@ -107,6 +107,8 @@ def handle_message(event):
     # tmpディレクトリに保存
     input_file_path = 'tmp/{}.m4a'.format(event.message.id)
     logger.info('Receive m4a file name: {}'.format(str(input_file_path)))
+    if os.path.exists('tmp/') is not True:
+        os.mkdir('tmp/')
     with open(input_file_path, 'wb') as fd:
         for chunk in message_content.iter_content():
             fd.write(chunk)
@@ -148,8 +150,8 @@ def handle_message(event):
     return 'ok'
 
 if __name__ == '__main__':
-    # app.run(
-    #     host = 'localhost',port=3333, ssl_context=context, threaded=True, debug=True
-    # )
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(
+        host = 'localhost',port=3333
+    )
+    # port = int(os.environ.get("PORT", 5000))
+    # app.run(host='0.0.0.0', port=port)
