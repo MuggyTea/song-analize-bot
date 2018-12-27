@@ -105,10 +105,10 @@ def handle_message(event):
     # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
     message_content = line_bot_api.get_message_content(event.message.id)
     # tmpディレクトリに保存
-    input_file_path = 'tmp/{}.m4a'.format(event.message.id)
+    input_file_path = '/tmp/{}.m4a'.format(event.message.id)
     logger.info('Receive m4a file name: {}'.format(str(input_file_path)))
-    if os.path.exists('tmp/') is not True:
-        os.mkdir('tmp/')
+    if os.path.exists('/tmp/') is not True:
+        os.mkdir('/tmp/')
     with open(input_file_path, 'wb') as fd:
         for chunk in message_content.iter_content():
             fd.write(chunk)
