@@ -14,6 +14,7 @@ import os
 import glob
 from analize_logging import logger
 from pydub import AudioSegment
+import upload_s3
 
 """
 LIN　BOTから送信された音声データをmp3に変換し、m4a_files/配下にアップロードするところまで担当する
@@ -44,6 +45,9 @@ def m4a_to_mp3(input_file_path):
         print('status error')
         logger.error('failed convert {0}, {1}'.format(status, output))
         return input_file_path_mp3
+    # S3にアップロード
+    upload_s3.sign_s3(
+        '/mp3/{}'.format(input_file_path_mp3), "audio/mpeg")
     logger.info('Done converted\nstatus: {0}\noutput: {1}'.format(status, output))
     # 保存
     # with open(input_file_path_mp3, 'rw') as fb:
