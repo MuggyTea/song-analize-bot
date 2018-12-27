@@ -6,6 +6,7 @@ import logging
 from logging import getLogger, StreamHandler, Formatter, FileHandler
 from datetime import datetime
 import os
+import upload_s3
 
 """
 1. loggerの設定
@@ -28,9 +29,11 @@ stream_handler.setFormatter(handler_format)
 # テキスト出力先
 timestamp = datetime.now().strftime("%Y-%m-%d")
 logging_file = 'ChordAnalize_{}.log'.format(timestamp)
-if os.path.exists('log/') is not True:
-    os.mkdir('log/')
-file_handler = FileHandler('log/{}'.format(logging_file))
+if os.path.exists('/tmp/log/') is not True:
+    os.mkdir('/tmp/log/')
+file_handler = FileHandler('/tmp/log/{}'.format(logging_file))
+logfile_upload_s3 = upload_s3.sign_s3(
+    '/tmp/log/{}'.format(logging_file), "text/plain")
 # set logging format for log files
 file_handler.setFormatter(handler_format)
 
