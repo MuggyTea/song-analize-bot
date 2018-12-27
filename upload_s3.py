@@ -4,7 +4,7 @@ from flask import request
 import os, json, boto3
 
 def sign_s3(file_name, file_type):
-  S3_BUCKET = os.environ.get('S3_BUCKET')
+  S3_BUCKET = os.environ.get('song-analize-linebot')
 
   # file_name = request.args.get('file_name')
   # file_type = request.args.get('file_type')
