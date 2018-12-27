@@ -35,5 +35,5 @@ def detect_chords(input_file):
 
 
 if __name__ == "__main__":
-    a = detect_chords(input_file='tmp/sample1.mp3')
+    a = detect_chords(input_file='m4a_files/sample1.mp3')
     print(a)
