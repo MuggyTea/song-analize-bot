@@ -46,8 +46,7 @@ def m4a_to_mp3(input_file_path):
         logger.error('failed convert {0}, {1}'.format(status, output))
         return input_file_path_mp3
     # S3にアップロード
-    upload_s3.sign_s3(
-        '/mp3/{}'.format(input_file_path_mp3), "audio/mpeg")
+    upload_s3.sign_s3(input_file_path_mp3, 'mp3/{}.mp3'.format(root.strip('/tmp/')))
     logger.info('Done converted\nstatus: {0}\noutput: {1}'.format(status, output))
     # 保存
     # with open(input_file_path_mp3, 'rw') as fb:

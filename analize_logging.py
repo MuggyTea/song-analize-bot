@@ -29,11 +29,11 @@ stream_handler.setFormatter(handler_format)
 # テキスト出力先
 timestamp = datetime.now().strftime("%Y-%m-%d")
 logging_file = 'ChordAnalize_{}.log'.format(timestamp)
-if os.path.exists('/tmp/log/') is not True:
-    os.mkdir('/tmp/log/')
-file_handler = FileHandler('/tmp/log/{}'.format(logging_file))
-logfile_upload_s3 = upload_s3.sign_s3(
-    '/tmp/log/{}'.format(logging_file), "text/plain")
+if os.path.exists('/tmp/analize_log/') is not True:
+    os.mkdir('/tmp/analize_log/')
+file_handler = FileHandler('/tmp/analize_log//{}'.format(logging_file))
+# S3にアップロード
+upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}.log'.format(logging_file))
 # set logging format for log files
 file_handler.setFormatter(handler_format)
 

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from flask import request
-import os, json, boto3
+import os, json
 import settings
+import boto3
 
-def sign_s3(file_name, file_type):
+def sign_s3(sorce_file, target):
  #
  # AWS Session
  #
@@ -12,12 +13,6 @@ def sign_s3(file_name, file_type):
                                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
                                region_name=settings.AWS_REGION_NAME)
  s3 = session.resource('s3')
+
  bucket = s3.Bucket(settings.AWS_S3_BUCKET_NAME)
-
- obj = bucket.Object(file_name)
- response = obj.put(
- Body=file_name,
- ContentEncoding='utf-8',
- ContentType=file_type
- )
-
+ bucket.upload_file(sorce_file, target)
