@@ -28,6 +28,7 @@ import set_response
 from analize_logging import logger
 from youtube2mp3 import youtube2mp3
 from mp3_to_response import mp3_to_response
+import asyncio
 app = Flask(__name__)
 # httpsでアクセスできるようにする
 # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
@@ -41,6 +42,17 @@ MAX_RETRY = 6
 @app.route("/")
 def hello_world():
     return "hello world!"
+
+# asyncとつけると通常の関数ではなくコルーチン
+async def wrap_with_delay(sec, func, *args):
+    await asyncio.sleep(sec) # awaitで制御をイベントループにもどす
+    func(*args)
+
+def check_timeout(push, loop=None):
+    logger.info('check timeout')
+    if loop is None:
+        loop = asyncio.get_event_loop()
+        loop.stop()  # イベントループをとめて制御をもどす処理を追加
 
 # 音声ファイルを受け取る関数
 @app.route('/callback', methods=['POST'])
@@ -65,9 +77,10 @@ def callback():
                                     FileMessage,ImageMessage,
                                     StickerMessage, VideoMessage, LocationMessage))
 def handle_message(event):
-    # 入ってきたものがaudio以外だったら、デフォルトメッセージを返す
     if event.message.type is not 'audio':
+    # 入ってきたものがaudio以外だったら、デフォルトメッセージを返す
         start_youtube_time = time.time()
+        """
         if 'https://www.youtube.com/' in event.message.text:
             logger.info('Message ID: {}'.format(str(event.message.id)))
             logger.info('User ID: {}'.format(str(event.source.user_id)))
@@ -83,13 +96,11 @@ def handle_message(event):
                          '終わったらまた話しかけるねー'
                 )
             )
+            # 9秒ごとにメッセージを送る
+            asyncio.ensure_future(wrap_with_delay(9, check_timeout, check_push_msg))
+            loop.run_forever()
             yt2mp4 = youtube2mp3(event.message.text, event.message.id)
-            line_bot_api.push_message(
-                event.source.user_id,  # トークンとテキストで紐づけてる
-                TextSendMessage(
-                    text='半分くらい終わったよー'
-                )
-            )
+
             logger.info('get youtube mp4 data. {}'.format(yt2mp4))
             yt2mp3 = song_upload.m4a_to_mp3(yt2mp4)
             # 得られたmp3データからレスポンス成形
@@ -101,6 +112,7 @@ def handle_message(event):
                     end_youtube_time = time.time() - start_youtube_time
                     logger.info('time for analize youtube audio: {}'.format(
                         end_youtube_time))
+                    loop.stop() # stop timeout loop
                     line_bot_api.push_message(
                         event.source.user_id,  # トークンとテキストで紐づけてる
                         TextSendMessage(
@@ -142,7 +154,7 @@ def handle_message(event):
                     event.reply_token,  # トークンとテキストで紐づけてる
                     TextSendMessage(
                         text='あなたと一緒にコード解析するよー！\n'
-                             '5分以内のmp3音楽ファイルか音声を録音して送ってみてね'
+                             '5分以内のmp3音楽ファイルか音声を録音して送ってみてね。\n'
                              )
                 )
                 break
@@ -152,11 +164,10 @@ def handle_message(event):
                 line_bot_api.reply_message(
                     event.reply_token,  # トークンとテキストで紐づけてる
                     TextSendMessage(text='あなたと一緒にコード解析するよー！\n'
-                                         '10分以内の音楽ファイルか音声を録音して送ってみてね\n')
+                                         '5分以内の音楽ファイルか音声を録音して送ってみてね\n')
                 )
                 
         return 'ok'
-        """
 
     start_time = time.time()
     # print(str(event.message.id))
@@ -210,6 +221,7 @@ def handle_message(event):
                 )
             )
             """
+            loop.stop()  # stop timeout loop
             # push APIで送る
             line_bot_api.push_message(
                 event.source.user_id,  # トークンとテキストで紐づけてる

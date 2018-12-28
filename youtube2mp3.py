@@ -6,6 +6,7 @@ from analize_logging import logger
 import os
 from pydub import AudioSegment
 import upload_s3
+import asyncio
 
 def youtube2mp3(youtube_url, line_userid):
     logger.info('youtube url: {}'.format(youtube_url))
