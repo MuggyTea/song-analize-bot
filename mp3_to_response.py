@@ -18,7 +18,7 @@ def mp3_to_response(data_mp3):
         chord_analize_response = set_response.set_response_chord_analize(analize_chord)
         logger.info('Made Response:{} '.format(str(chord_analize_response)))
         return chord_analize_response
-    elif analize_chord_j['errors'] is True:
+    elif analize_chord_j['errors']:
         if analize_chord_j['errors'][0]['error_code'] == '23':
             chord_analize_response = 'オーディオファイルが短すぎるみたい。\n15秒以上にしてもう一回送ってみてね！'
             logger.info('Made Response: '.format(chord_analize_response))

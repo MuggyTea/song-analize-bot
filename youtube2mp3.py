@@ -20,7 +20,6 @@ def youtube2mp3(youtube_url, line_userid):
         logger.info(lis)
     # get_bu_itagtodownloadメソッドででダウンロードができる
     yt2mp3 = yt.streams.get_by_itag(140).download('/tmp/')
-    print(yt2mp3)
     logger.info('youtube video converted to mp4 {}'.format(yt2mp3))
     # LINEのuseridにrenameする
     input_file_path = '/tmp/{}.mp4'.format(line_userid)
