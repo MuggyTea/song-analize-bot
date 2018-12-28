@@ -115,7 +115,8 @@ def handle_message(event):
     line_bot_api.push_message(
         event.source.user_id,  # トークンとテキストで紐づけてる
         TextSendMessage(text='解析してみるよー！\n'
-                             '少し時間かかるかも。終わったら話しかけるねー')
+                             '終わったら話しかけるねー。\n'
+                             '1分経ってもお返事が来なかったら、もう少し短いファイルを送ってみてくれるかな？')
     )
     start_chunk = time.time()
     with open(input_file_path, 'wb') as fd:
