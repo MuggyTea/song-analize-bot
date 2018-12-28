@@ -229,7 +229,9 @@ def handle_message(event):
 
 if __name__ == '__main__':
     app.run(
-        host = 'localhost',port=3333
+        host = 'localhost',
+        port=3333,
+        threaded=True
     )
     # port = int(os.environ.get("PORT", 5000))
     # app.run(host='0.0.0.0', port=port)
