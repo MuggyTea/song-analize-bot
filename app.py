@@ -181,12 +181,12 @@ def handle_message(event):
         logger.info('make temporary directory')
         os.mkdir('/tmp/')
     # 10秒以内に応答がないとセッションタイムアウトになるので、送る
-    line_bot_api.push_message(
-        event.source.user_id,  # トークンとテキストで紐づけてる
-        TextSendMessage(
-            text='解析してみる！\n30秒後くらいにまた話しかけるねー'
-        )
-    )
+    # line_bot_api.push_message(
+    #     event.source.user_id,  # トークンとテキストで紐づけてる
+    #     TextSendMessage(
+    #         text='解析してみる！\n30秒後くらいにまた話しかけるねー'
+    #     )
+    # )
     with open(input_file_path, 'wb') as fd:
         for i in range(MAX_RETRY):
             try:
@@ -212,7 +212,7 @@ def handle_message(event):
             #     sleep((30-end_time))
             # logger.info('Result: {}'.format(chord_analize_response))
             # LINE BOTが返す内容を決めるメソッド
-            """push API使えないバージョン
+            # push API使えないバージョン
             line_bot_api.reply_message(
                 event.reply_token,  # トークンとテキストで紐づけてる
                 TextSendMessage(
@@ -220,16 +220,15 @@ def handle_message(event):
                     str(chord_analize_response)
                 )
             )
-            """
-            loop.stop()  # stop timeout loop
-            # push APIで送る
-            line_bot_api.push_message(
-                event.source.user_id,  # トークンとテキストで紐づけてる
-                TextSendMessage(
-                    text=
-                    str(chord_analize_response)
-                )
-            )
+
+            # # push APIで送る
+            # line_bot_api.push_message(
+            #     event.source.user_id,  # トークンとテキストで紐づけてる
+            #     TextSendMessage(
+            #         text=
+            #         str(chord_analize_response)
+            #     )
+            # )
             logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
             break
         except LineBotApiError as e:
