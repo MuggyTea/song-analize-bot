@@ -20,6 +20,7 @@ from linebot.models import (
     FileMessage,ImageMessage, StickerMessage, VideoMessage, LocationMessage,
 )
 
+from pydub import AudioSegment
 import settings
 import upload_s3
 import chord_analize
@@ -63,7 +64,6 @@ def callback():
     # get request body as text
     body = request.get_data(as_text=True)
     logger.info('Request body: '+str(body))
-    print('Request body: ' + str(body))
 
     # hadle webhook body
     try:
@@ -80,81 +80,14 @@ def handle_message(event):
     if event.message.type is not 'audio':
     # 入ってきたものがaudio以外だったら、デフォルトメッセージを返す
         start_youtube_time = time.time()
-        """
-        if 'https://www.youtube.com/' in event.message.text:
-            logger.info('Message ID: {}'.format(str(event.message.id)))
-            logger.info('User ID: {}'.format(str(event.source.user_id)))
-            logger.info('been Sent Message: ' + str(event.message.text))
-            print('been Sent Message: ' + str(event.message.text))
-            # youtubeURLの場合はmp3解析する(userIdにrenameする)
-            # 10秒以内に応答がないとセッションタイムアウトになるので、送る
-            line_bot_api.push_message(
-                event.source.user_id,  # トークンとテキストで紐づけてる
-                TextSendMessage(
-                    text='解析してみる！\n'
-                         '2分くらいでできたら良いなあ\n'
-                         '終わったらまた話しかけるねー'
-                )
-            )
-            # 9秒ごとにメッセージを送る
-            asyncio.ensure_future(wrap_with_delay(9, check_timeout, check_push_msg))
-            loop.run_forever()
-            yt2mp4 = youtube2mp3(event.message.text, event.message.id)
-
-            logger.info('get youtube mp4 data. {}'.format(yt2mp4))
-            yt2mp3 = song_upload.m4a_to_mp3(yt2mp4)
-            # 得られたmp3データからレスポンス成形
-            chord_analize_response = mp3_to_response(yt2mp3)
-            for i in range(1, MAX_RETRY):
-                try:
-                    logger.info('Result: {}'.format(chord_analize_response))
-                    # LINE BOTが返す内容を決めるメソッド
-                    end_youtube_time = time.time() - start_youtube_time
-                    logger.info('time for analize youtube audio: {}'.format(
-                        end_youtube_time))
-                    loop.stop() # stop timeout loop
-                    line_bot_api.push_message(
-                        event.source.user_id,  # トークンとテキストで紐づけてる
-                        TextSendMessage(
-                            text=
-                            str(chord_analize_response)
-                        )
-                    )
-                    logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
-                    break
-                except LineBotApiError as e:
-                    logger.error('LineBotApiError: {}'.format(traceback.format_exc()))
-                    logger.error('retry: {0}/{1}'.format(i, MAX_RETRY-1))
-                    sleep(i*5)
-            return 'ok'
-        else:   # それ以外はデフォルトメッセージを返す
-            # LINE BOTが返す内容を決める
-            try:
-                line_bot_api.reply_message(
-                    event.reply_token,  # トークンとテキストで紐づけてる
-                    TextSendMessage(
-                        text='あなたと一緒にコード解析するよー！\n'
-                             '5分以内のmp3音楽ファイルか音声を録音して送ってみてね\n'
-                             'youtubeのURLも調べられるよ。でも少し時間が掛かっちゃうかも')
-                )
-            except LineBotApiError as e:
-                line_bot_api.reply_message(
-                    event.reply_token,  # トークンとテキストで紐づけてる
-                    TextSendMessage(text='あなたと一緒にコード解析するよー！\n'
-                             '10分以内の音楽ファイルか音声を録音して送ってみてね\n')
-                )
-                logger.error(e)
-                print(e)
-            return 'ok'
-
-        """
         for i in range(1, MAX_RETRY):
             try:
                 line_bot_api.reply_message(
                     event.reply_token,  # トークンとテキストで紐づけてる
                     TextSendMessage(
                         text='あなたと一緒にコード解析するよー！\n'
-                             '5分以内のmp3音楽ファイルか音声を録音して送ってみてね。\n'
+                             'LINEで録音して送ってみてね。\n'
+                             '容量の小さいmp3ファイルも解析できるよ'
                              )
                 )
                 break
@@ -164,13 +97,11 @@ def handle_message(event):
                 line_bot_api.reply_message(
                     event.reply_token,  # トークンとテキストで紐づけてる
                     TextSendMessage(text='あなたと一緒にコード解析するよー！\n'
-                                         '5分以内の音楽ファイルか音声を録音して送ってみてね\n')
+                                         'LINEで録音して送ってみてね\n'
+                                         '容量の小さいmp3ファイルも解析できるよ\n')
                 )
                 
         return 'ok'
-
-    start_time = time.time()
-    # print(str(event.message.id))
     logger.info('Message ID: {}'.format(str(event.message.id)))
     # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
     message_content = line_bot_api.get_message_content(event.message.id)
@@ -180,13 +111,13 @@ def handle_message(event):
     if os.path.exists('/tmp/') is not True:
         logger.info('make temporary directory')
         os.mkdir('/tmp/')
-    # 10秒以内に応答がないとセッションタイムアウトになるので、送る
-    # line_bot_api.push_message(
-    #     event.source.user_id,  # トークンとテキストで紐づけてる
-    #     TextSendMessage(
-    #         text='解析してみる！\n30秒後くらいにまた話しかけるねー'
-    #     )
-    # )
+
+    line_bot_api.push_message(
+        event.source.user_id,  # トークンとテキストで紐づけてる
+        TextSendMessage(text='解析してみるよー！\n'
+                             '少し時間かかるかも。終わったら話しかけるねー')
+    )
+    start_chunk = time.time()
     with open(input_file_path, 'wb') as fd:
         for i in range(MAX_RETRY):
             try:
@@ -197,38 +128,33 @@ def handle_message(event):
                 logger.error('LineBotApiError: {}'.format(traceback.format_exc()))
                 logger.error('retry: {0}/{1}'.format(i, MAX_RETRY))
                 sleep(i * 5)
+        end_chunk = time.time() - start_chunk
+        logger.info('chunk time: {}'.format(end_chunk))
+        start_conv_mp3 = time.time()
         # S3にアップロード
         upload_s3.sign_s3(input_file_path, 'm4a/{}.m4a'.format(event.message.id))
     # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
     chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
+    end_conv_mp3 = time.time() - start_conv_mp3
+    logger.info('converted time: {} [sec]'.format(end_conv_mp3))
+    start_analize = time.time()
     chord_analize_response = mp3_to_response(chunk_mp3)
+    end_analize = time.time() - start_analize
+    logger.info('Analize time: {} [sec]'.format(end_analize))
     for i in range(1, MAX_RETRY):
         try:
-            end_time = time.time() - start_time
-            logger.info('Elapsed time: {} [sec]'.format(end_time))
-            # １レスポンス後30秒開ける必要があるため、30秒経つまでまでスリープする
-            # if end_time > 30:
-            #     logger.info('sleeping {} [sec]'.format(30-end_time))
-            #     sleep((30-end_time))
-            # logger.info('Result: {}'.format(chord_analize_response))
-            # LINE BOTが返す内容を決めるメソッド
             # push API使えないバージョン
-            line_bot_api.reply_message(
-                event.reply_token,  # トークンとテキストで紐づけてる
-                TextSendMessage(
-                    text=
-                    str(chord_analize_response)
-                )
-            )
-
-            # # push APIで送る
-            # line_bot_api.push_message(
-            #     event.source.user_id,  # トークンとテキストで紐づけてる
+            # line_bot_api.reply_message(
+            #     event.reply_token,  # トークンとテキストで紐づけてる
             #     TextSendMessage(
             #         text=
             #         str(chord_analize_response)
             #     )
             # )
+            line_bot_api.push_message(
+                event.source.user_id,  # トークンとテキストで紐づけてる
+                TextSendMessage(text=str(chord_analize_response))
+            )
             logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
             break
         except LineBotApiError as e:
@@ -244,5 +170,3 @@ if __name__ == '__main__':
         port=3333,
         threaded=True
     )
-    # port = int(os.environ.get("PORT", 5000))
-    # app.run(host='0.0.0.0', port=port)

@@ -27,7 +27,6 @@ def m4a_to_mp3(input_file_path):
     root, ext = os.path.splitext(input_file_path)
     logger.info('start m4a to mp3 convert {}'.format(input_file_path))
     if ext not in ['.m4a', '.mp4']:
-        print('if ext not in m4a')
         logger.debug('input file: {}'.format(str(input_file_path)))
         return
     if os.path.exists('/tmp/') is not True:
@@ -36,13 +35,12 @@ def m4a_to_mp3(input_file_path):
     # 変換するmp3ファイルの名前
     input_file_path_mp3 = '%s.mp3' % root
     # set commands for m4a to mp3 using ffmpeg
-    cmd = 'ffmpeg -i %s -ab 32k -ar 16000 %s' % (input_file_path, input_file_path_mp3)
+    cmd = 'ffmpeg -i %s -ab 64k -ar 16000 %s' % (input_file_path, input_file_path_mp3)
     logger.info('converted mp3 file: {}'.format(input_file_path_mp3))
     logger.info(cmd)
     # do m4a to mp3（どちらもバイナリではなくパスを指定すること)
     status, output = subprocess.getstatusoutput(cmd)
     if status != 0:
-        print('status error')
         logger.error('failed convert {0}, {1}'.format(status, output))
         return input_file_path_mp3
     # S3にアップロード
@@ -51,10 +49,10 @@ def m4a_to_mp3(input_file_path):
     # 保存
     # with open(input_file_path_mp3, 'rw') as fb:
     #     fb.write(input_file_path_mp3)
-    # mp3ファイルを5分にカットする
-    mp3 = AudioSegment.from_file(input_file_path_mp3, format='mp3')
-    # 0~500sec(300000ms)にカット
-    mp3_5min = mp3[0:300000]
+    # # mp3ファイルを5分にカットする
+    # mp3 = AudioSegment.from_file(input_file_path_mp3, format='mp3')
+    # # 0~500sec(300000ms)にカット
+    # mp3_5min = mp3[0:300000]
     # mp3ファイルパスを返す
     return input_file_path_mp3
 
