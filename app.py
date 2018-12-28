@@ -120,7 +120,7 @@ def handle_message(event):
     )
     start_chunk = time.time()
     with open(input_file_path, 'wb') as fd:
-        for i in range(MAX_RETRY):
+        for i in range(MAX_RETRY):  # m4aバイナリの書き込みに失敗したら、5回までリトライ処理入れる
             try:
                 for chunk in message_content.iter_content():
                     fd.write(chunk)
@@ -134,6 +134,7 @@ def handle_message(event):
         start_conv_mp3 = time.time()
         # S3にアップロード
         upload_s3.sign_s3(input_file_path, 'm4a/{}.m4a'.format(event.message.id))
+
     # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
     chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
     end_conv_mp3 = time.time() - start_conv_mp3
@@ -142,26 +143,19 @@ def handle_message(event):
     chord_analize_response = mp3_to_response(chunk_mp3)
     end_analize = time.time() - start_analize
     logger.info('Analize time: {} [sec]'.format(end_analize))
-    for i in range(1, MAX_RETRY):
-        try:
-            # push API使えないバージョン
-            # line_bot_api.reply_message(
-            #     event.reply_token,  # トークンとテキストで紐づけてる
-            #     TextSendMessage(
-            #         text=
-            #         str(chord_analize_response)
-            #     )
-            # )
-            line_bot_api.push_message(
-                event.source.user_id,  # トークンとテキストで紐づけてる
-                TextSendMessage(text=str(chord_analize_response))
-            )
-            logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
-            break
-        except LineBotApiError as e:
-            logger.error('LineBotApiError: {}'.format(traceback.format_exc()))
-            logger.error('retry: {0}/{1}'.format(i, MAX_RETRY-1))
-            sleep(i*5)
+    # push API使えないバージョン
+    # line_bot_api.reply_message(
+    #     event.reply_token,  # トークンとテキストで紐づけてる
+    #     TextSendMessage(
+    #         text=
+    #         str(chord_analize_response)
+    #     )
+    # )
+    line_bot_api.push_message(
+        event.source.user_id,  # トークンとテキストで紐づけてる
+        TextSendMessage(text=str(chord_analize_response))
+    )
+    logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
     return 'ok'
 
 
