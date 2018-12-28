@@ -84,6 +84,12 @@ def handle_message(event):
                 )
             )
             yt2mp4 = youtube2mp3(event.message.text, event.message.id)
+            line_bot_api.push_message(
+                event.source.user_id,  # トークンとテキストで紐づけてる
+                TextSendMessage(
+                    text='半分くらい終わったよー'
+                )
+            )
             logger.info('get youtube mp4 data. {}'.format(yt2mp4))
             yt2mp3 = song_upload.m4a_to_mp3(yt2mp4)
             # 得られたmp3データからレスポンス成形
