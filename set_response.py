@@ -20,6 +20,8 @@ def set_response_chord_analize(analize_chord_s):
     chords_list = []
     # 取りたい項目を決める（今回は'chords'）
     for key, value in enumerate(analize_chord_j['chords_result']['chords']):
+        if value['chord'] == 'N':
+            continue
         # コードのみ抽出
         chord = value['chord']
         # リストに格納
