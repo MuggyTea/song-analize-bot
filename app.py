@@ -3,6 +3,7 @@
 
 import os
 import json
+import time
 import traceback
 from time import sleep
 from flask import Flask, request, abort
@@ -11,7 +12,8 @@ from linebot import (
 )
 from linebot.exceptions import (
     InvalidSignatureError,
-    LineBotApiError)
+    LineBotApiError
+)
 from linebot.models import (
     MessageEvent,  TextSendMessage,
     TextMessage, AudioMessage,
@@ -65,12 +67,22 @@ def callback():
 def handle_message(event):
     # 入ってきたものがaudio以外だったら、デフォルトメッセージを返す
     if event.message.type is not 'audio':
-        """"
+        start_youtube_time = time.time()
         if 'https://www.youtube.com/' in event.message.text:
             logger.info('Message ID: {}'.format(str(event.message.id)))
+            logger.info('User ID: {}'.format(str(event.source.user_id)))
             logger.info('been Sent Message: ' + str(event.message.text))
             print('been Sent Message: ' + str(event.message.text))
             # youtubeURLの場合はmp3解析する(userIdにrenameする)
+            # 10秒以内に応答がないとセッションタイムアウトになるので、送る
+            line_bot_api.push_message(
+                event.source.user_id,  # トークンとテキストで紐づけてる
+                TextSendMessage(
+                    text='解析してみる！\n'
+                         '2分くらいでできたら良いなあ\n'
+                         '終わったらまた話しかけるねー'
+                )
+            )
             yt2mp4 = youtube2mp3(event.message.text, event.message.id)
             logger.info('get youtube mp4 data. {}'.format(yt2mp4))
             yt2mp3 = song_upload.m4a_to_mp3(yt2mp4)
@@ -80,8 +92,11 @@ def handle_message(event):
                 try:
                     logger.info('Result: {}'.format(chord_analize_response))
                     # LINE BOTが返す内容を決めるメソッド
-                    line_bot_api.reply_message(
-                        event.reply_token,  # トークンとテキストで紐づけてる
+                    end_youtube_time = time.time() - start_youtube_time
+                    logger.info('time for analize youtube audio: {}'.format(
+                        end_youtube_time))
+                    line_bot_api.push_message(
+                        event.source.user_id,  # トークンとテキストで紐づけてる
                         TextSendMessage(
                             text=
                             str(chord_analize_response)
@@ -113,8 +128,8 @@ def handle_message(event):
                 logger.error(e)
                 print(e)
             return 'ok'
-        """
 
+        """
         for i in range(1, MAX_RETRY):
             try:
                 line_bot_api.reply_message(
@@ -133,8 +148,11 @@ def handle_message(event):
                     TextSendMessage(text='あなたと一緒にコード解析するよー！\n'
                                          '10分以内の音楽ファイルか音声を録音して送ってみてね\n')
                 )
+                
         return 'ok'
+        """
 
+    start_time = time.time()
     # print(str(event.message.id))
     logger.info('Message ID: {}'.format(str(event.message.id)))
     # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
@@ -145,6 +163,13 @@ def handle_message(event):
     if os.path.exists('/tmp/') is not True:
         logger.info('make temporary directory')
         os.mkdir('/tmp/')
+    # 10秒以内に応答がないとセッションタイムアウトになるので、送る
+    line_bot_api.push_message(
+        event.source.user_id,  # トークンとテキストで紐づけてる
+        TextSendMessage(
+            text='解析してみる！\n30秒後くらいにまた話しかけるねー'
+        )
+    )
     with open(input_file_path, 'wb') as fd:
         for i in range(MAX_RETRY):
             try:
@@ -156,17 +181,32 @@ def handle_message(event):
                 logger.error('retry: {0}/{1}'.format(i, MAX_RETRY))
                 sleep(i * 5)
         # S3にアップロード
-        # upload_s3.sign_s3(input_file _path, 'm4a/{}.m4a'.format(event.message.id))
+        upload_s3.sign_s3(input_file_path, 'm4a/{}.m4a'.format(event.message.id))
     # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
-    # chunk_mp3 = song_upload.m4a_to_mp3(input_file_path, open(input_file_path, 'rb'))
     chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
     chord_analize_response = mp3_to_response(chunk_mp3)
     for i in range(1, MAX_RETRY):
         try:
-            logger.info('Result: {}'.format(chord_analize_response))
+            end_time = time.time() - start_time
+            logger.info('Elapsed time: {} [sec]'.format(end_time))
+            # １レスポンス後30秒開ける必要があるため、30秒経つまでまでスリープする
+            # if end_time > 30:
+            #     logger.info('sleeping {} [sec]'.format(30-end_time))
+            #     sleep((30-end_time))
+            # logger.info('Result: {}'.format(chord_analize_response))
             # LINE BOTが返す内容を決めるメソッド
+            """push API使えないバージョン
             line_bot_api.reply_message(
                 event.reply_token,  # トークンとテキストで紐づけてる
+                TextSendMessage(
+                    text=
+                    str(chord_analize_response)
+                )
+            )
+            """
+            # push APIで送る
+            line_bot_api.push_message(
+                event.source.user_id,  # トークンとテキストで紐づけてる
                 TextSendMessage(
                     text=
                     str(chord_analize_response)
