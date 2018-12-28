@@ -11,7 +11,7 @@ def youtube2mp3(youtube_url, line_userid):
     logger.info('youtube url: {}'.format(youtube_url))
     print('youtube url: {}'.format(youtube_url))
     # S3にアップロード
-    upload_s3.sign_s3(youtube_url, 'youtube_url/{}'.format(youtube_url))
+    # upload_s3.sign_s3(youtube_url, 'youtube_url/{}'.format(youtube_url))
     # youtube動画を抜き出す
     yt = YouTube(youtube_url)
     # 動画の情報を出力
