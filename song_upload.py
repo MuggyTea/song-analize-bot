@@ -12,7 +12,7 @@ import os.path
 import sys
 import os
 import glob
-from analize_logging import logger
+from analize_logging import logger, logging_file
 from pydub import AudioSegment
 import upload_s3
 
@@ -26,17 +26,19 @@ def m4a_to_mp3(input_file_path):
     # パスから、拡張子と名前を分ける
     root, ext = os.path.splitext(input_file_path)
     logger.info('start m4a to mp3 convert {}'.format(input_file_path))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
     if ext not in ['.m4a', '.mp4']:
         logger.debug('input file: {}'.format(str(input_file_path)))
         return
     if os.path.exists('/tmp/') is not True:
         logger.info('make directory to mp3_files')
+        upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
         os.mkdir('/tmp/')
     # 変換するmp3ファイルの名前
     input_file_path_mp3 = '%s.mp3' % root
     # set commands for m4a to mp3 using ffmpeg
     cmd = 'ffmpeg -i %s -ab 64k -ar 16000 %s' % (input_file_path, input_file_path_mp3)
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
     logger.info('converted mp3 file: {}'.format(input_file_path_mp3))
     logger.info(cmd)
     # do m4a to mp3（どちらもバイナリではなくパスを指定すること)
@@ -47,7 +49,7 @@ def m4a_to_mp3(input_file_path):
     # S3にアップロード
     upload_s3.sign_s3(input_file_path_mp3, 'mp3/{}.mp3'.format(root.strip('/tmp/')))
     logger.info('Done converted\nstatus: {0}\noutput: {1}'.format(status, output))
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
     # 保存
     # with open(input_file_path_mp3, 'rw') as fb:
     #     fb.write(input_file_path_mp3)
