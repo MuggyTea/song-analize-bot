@@ -64,7 +64,7 @@ def callback():
     # get request body as text
     body = request.get_data(as_text=True)
     logger.info('Request body: '+str(body))
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
+    # upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
     # hadle webhook body
     try:
         handler.handle(body, signature)
@@ -103,13 +103,13 @@ def handle_message(event):
                 
         return 'ok'
     logger.info('Message ID: {}'.format(str(event.message.id)))
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
+    # upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
     # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
     message_content = line_bot_api.get_message_content(event.message.id)
     # tmpディレクトリに保存
     input_file_path = '/tmp/{}.m4a'.format(event.message.id)
     logger.info('Receive m4a file name: {}'.format(str(input_file_path)))
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
+    # upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
     if os.path.exists('/tmp/') is not True:
         logger.info('make temporary directory')
         os.mkdir('/tmp/')
@@ -159,7 +159,7 @@ def handle_message(event):
     )
     logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
     # S3にアップロード
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
+    # upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
     return 'ok'
 
 
