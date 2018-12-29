@@ -27,7 +27,7 @@ handler_format = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s
 stream_handler.setFormatter(handler_format)
 
 # テキスト出力先
-timestamp = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+timestamp = datetime.now().strftime("%Y-%m-%d-%H:%M")
 logging_file = 'ChordAnalize_{}.log'.format(timestamp)
 if os.path.exists('/tmp/analize_log/') is not True:
     os.mkdir('/tmp/analize_log/')
