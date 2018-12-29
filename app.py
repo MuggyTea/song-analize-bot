@@ -159,7 +159,7 @@ def handle_message(event):
     )
     logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
     # S3にアップロード
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logger.logging_file), 'log/{}'.format(logger.logging_file))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
     return 'ok'
 
 
