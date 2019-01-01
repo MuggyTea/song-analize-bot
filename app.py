@@ -64,7 +64,7 @@ def callback():
     # get request body as text
     body = request.get_data(as_text=True)
     logger.info('Request body: '+str(body))
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log_2nd/{}'.format(logging_file))
     # hadle webhook body
     try:
         handler.handle(body, signature)
@@ -103,23 +103,23 @@ def handle_message(event):
                 
         return 'ok'
     logger.info('Message ID: {}'.format(str(event.message.id)))
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log_2nd/{}'.format(logging_file))
     # オーディオデータ（バイナリ形式。'audio/x-m4a'）を取得する
     message_content = line_bot_api.get_message_content(event.message.id)
     # tmpディレクトリに保存
     input_file_path = '/tmp/{}.m4a'.format(event.message.id)
     logger.info('Receive m4a file name: {}'.format(str(input_file_path)))
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log_2nd/{}'.format(logging_file))
     if os.path.exists('/tmp/') is not True:
         logger.info('make temporary directory')
         os.mkdir('/tmp/')
 
-    line_bot_api.push_message(
-        event.source.user_id,  # トークンとテキストで紐づけてる
-        TextSendMessage(text='解析してみるよー！\n'
-                             '終わったら話しかけるねー。\n'
-                             '1分経ってもお返事が来なかったら、もう少し短いファイルを送ってみてくれるかな？')
-    )
+    # line_bot_api.push_message(
+    #     event.source.user_id,  # トークンとテキストで紐づけてる
+    #     TextSendMessage(text='解析してみるよー！\n'
+    #                          '終わったら話しかけるねー。\n'
+    #                          '1分経ってもお返事が来なかったら、もう少し短いファイルを送ってみてくれるかな？')
+    # )
     start_chunk = time.time()
     with open(input_file_path, 'wb') as fd:
         for i in range(MAX_RETRY):  # m4aバイナリの書き込みに失敗したら、5回までリトライ処理入れる
@@ -135,7 +135,7 @@ def handle_message(event):
         logger.info('chunk time: {}'.format(end_chunk))
         start_conv_mp3 = time.time()
         # S3にアップロード
-        upload_s3.sign_s3(input_file_path, 'm4a/{}.m4a'.format(event.message.id))
+        upload_s3.sign_s3(input_file_path, 'm4a_2nd/{}.m4a'.format(event.message.id))
 
     # m4aバイナリファイルをローカルに保存し、mp3バイナリファイルに変換する
     chunk_mp3 = song_upload.m4a_to_mp3(input_file_path)
@@ -153,13 +153,13 @@ def handle_message(event):
     #         str(chord_analize_response)
     #     )
     # )
-    line_bot_api.push_message(
-        event.source.user_id,  # トークンとテキストで紐づけてる
+    line_bot_api.reply_message(
+        event.reply_token,  # トークンとテキストで紐づけてる
         TextSendMessage(text=str(chord_analize_response))
     )
     logger.info('Success! Sent response for user: {}'.format(chord_analize_response))
     # S3にアップロード
-    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log/{}'.format(logging_file))
+    upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'log_2nd/{}'.format(logging_file))
     return 'ok'
 
 
