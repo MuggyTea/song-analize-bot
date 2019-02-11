@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
       <module fileurl="file://$PROJECT_DIR$/../mico-2nd/.idea/song-analize-bot.iml" filepath="$PROJECT_DIR$/../mico-2nd/.idea/song-analize-bot.iml" />
+=======
+      <module fileurl="file://$PROJECT_DIR$/.idea/song-analize-bot.iml" filepath="$PROJECT_DIR$/.idea/song-analize-bot.iml" />
+>>>>>>> b0c5620d340f09038c20cd4b520ca909d9d01618
     </modules>
   </component>
 </project>
