@@ -33,7 +33,7 @@ if os.path.exists('/tmp/analize_log/') is not True:
     os.mkdir('/tmp/analize_log/')
 file_handler = FileHandler('/tmp/analize_log//{}'.format(logging_file))
 # S3にアップロード
-upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'prd-mico1/log_2nd/{}'.format(logging_file))
+upload_s3.sign_s3('/tmp/analize_log//{}'.format(logging_file), 'mico/log/{}'.format(logging_file))
 # set logging format for log files
 file_handler.setFormatter(handler_format)
 
