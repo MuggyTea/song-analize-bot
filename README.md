@@ -1,17 +1,12 @@
-<<<<<<< HEAD
-# mico
-reply APIのみを使用したbot  
-友達登録無制限
+# What is mico bot
+return to detect chords to be recived a song on LINE.
+
+http://bit.ly/2GOL6uh 
 
 ## environments
-python 3.7.0  
+python==3.7.0  
 Flask==0.12.2  
 requirements.txt
 
-
 ## functions
-・chord analyze  
-・melody detect
-=======
-# song-analize-bot
->>>>>>> b0c5620d340f09038c20cd4b520ca909d9d01618
+chord analyze
