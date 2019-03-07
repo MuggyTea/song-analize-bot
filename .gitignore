@@ -113,11 +113,11 @@ server_pub.csr
 server_secret.key
 
 tmp/*
-.idea
-settings.py
 log/*
 mp3_files
 m4a_files
+settings.py
+.idea
 
 # 非同期試行錯誤
 async_push.py
