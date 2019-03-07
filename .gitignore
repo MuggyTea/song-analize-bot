@@ -117,6 +117,7 @@ log/*
 mp3_files
 m4a_files
 settings.py
+test.pu
 .idea
 
 # 非同期試行錯誤
